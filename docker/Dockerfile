@@ -1,5 +1,5 @@
 ARG CUDA_VERSION=12.9.1
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu24.04 AS base
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu24.04 AS base
 
 ARG TARGETARCH
 ARG BUILD_TYPE=all
@@ -16,6 +16,7 @@ ARG SGL_VERSION
 ARG USE_LATEST_SGLANG=0
 ARG GDRCOPY_VERSION=2.5.1
 ARG PIP_DEFAULT_INDEX
+ARG PIP_TRUSTED_HOST
 ARG UBUNTU_MIRROR
 ARG GITHUB_ARTIFACTORY=github.com
 ARG INSTALL_FLASHINFER_JIT_CACHE=0
@@ -126,9 +127,16 @@ RUN --mount=type=cache,target=/var/cache/apt,id=base-apt \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Replace pip global cache if specified
+# Replace pip global index if specified
 RUN if [ -n "${PIP_DEFAULT_INDEX}" ]; then \
     python3 -m pip config set global.index-url ${PIP_DEFAULT_INDEX}; \
+    if echo "${PIP_DEFAULT_INDEX}" | grep -qE '^http://'; then \
+        PIP_INDEX_HOST=$(echo "${PIP_DEFAULT_INDEX}" | sed -E 's#^https?://([^/]+)/?.*$#\1#'); \
+        python3 -m pip config set global.trusted-host "${PIP_INDEX_HOST}"; \
+    fi; \
+fi \
+&& if [ -n "${PIP_TRUSTED_HOST}" ]; then \
+    python3 -m pip config set global.trusted-host "${PIP_TRUSTED_HOST}"; \
 fi
 
 # GDRCopy installation
@@ -467,7 +475,7 @@ WORKDIR /sgl-workspace/sglang
 # - Ready-to-run inference server environment
 #
 # Note: Uses devel base for complete NVCC toolchain required by DeepGEMM JIT
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu24.04 AS runtime
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu24.04 AS runtime
 
 ARG CUDA_VERSION
 ARG TARGETARCH
