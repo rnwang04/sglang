@@ -20,6 +20,7 @@ ARG PIP_TRUSTED_HOST
 ARG UBUNTU_MIRROR
 ARG GITHUB_ARTIFACTORY=github.com
 ARG INSTALL_FLASHINFER_JIT_CACHE=0
+ARG UPGRADE_TRANSFORMERS=false
 ARG FLASHINFER_VERSION=0.6.3
 ARG MOONCAKE_VERSION=0.3.9
 #if need other arg please add in MOONCAKE_COMPILE_ARG
@@ -182,6 +183,7 @@ ARG GRACE_BLACKWELL_DEEPEP_BRANCH
 ARG DEEPEP_COMMIT
 ARG TRITON_LANG_COMMIT
 ARG GITHUB_ARTIFACTORY
+ARG UPGRADE_TRANSFORMERS
 
 WORKDIR /sgl-workspace
 
@@ -453,6 +455,11 @@ RUN if [ "${CUDA_VERSION%%.*}" = "13" ] && [ -d /usr/local/lib/python3.12/dist-p
     fi
 
 RUN python3 -m pip install --upgrade "urllib3>=2.6.3"
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    if [ "$UPGRADE_TRANSFORMERS" = "true" ]; then \
+        python3 -m pip install --upgrade "transformers==5.2.0"; \
+    fi
 
 # Set workspace directory
 WORKDIR /sgl-workspace/sglang
