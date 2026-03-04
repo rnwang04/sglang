@@ -4,7 +4,7 @@
 
 ## 1. use venv to install python dependencies
 
-> Step1 should run on CPU Cluster with network access.
+> This step should run on CPU Cluster with network access.
 
 1. Install python3.12
 ```bash
@@ -33,13 +33,19 @@ rm -rf /sgl-workspace
 ./uv_install.sh --venv /inspire/qb-ilm/project/daijinquan/public/env --name sglang-py312
 ```
 
-## 2. build docker on bare metal and then upload
+## 2. build docker and then upload
+
+> This step should run on bare metal with network access.
 
 ```bash
 sudo nerdctl build --progress=plain -f docker/simplified.Dockerfile --build-arg CUDA_VERSION=12.8.1 --build-arg PIP_DEFAULT_INDEX=http://nexus.sii.shaipower.online/repository/pypi/simple/ --build-arg PIP_TRUSTED_HOST=nexus.sii.shaipower.online --build-arg PYTHON_VERSION=3.12.12 -t sglang:cu128-base-sglang-py312 .
+sudo nerdctl tag sglang:cu128-base-sglang-py312 xxx
+sudo nerdctl login xxx
+sudo nerdctl push xxx
 ```
 
 ## 3. use this virtual env with docker
+
 ```bash
 source /inspire/qb-ilm/project/daijinquan/public/env/sglang-py312/bin/activate
 python -c "import sglang; print(sglang.__version__)"
