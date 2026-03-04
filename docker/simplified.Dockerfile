@@ -21,8 +21,8 @@ RUN if [ -n "$UBUNTU_MIRROR" ]; then \
     sed -i "s|http://.*security.ubuntu.com|$UBUNTU_MIRROR|g" /etc/apt/sources.list; \
 fi
 
-# Python 3.10.12 setup (build from source for exact version)
-ARG PYTHON_VERSION=3.10.12
+# Python setup (build from source for exact version)
+ARG PYTHON_VERSION=3.12.12
 RUN --mount=type=cache,target=/var/cache/apt,id=base-apt \
     apt update && apt install -y --no-install-recommends \
         wget \
@@ -46,13 +46,15 @@ RUN --mount=type=cache,target=/var/cache/apt,id=base-apt \
     && make -j$(nproc) \
     && make altinstall \
     && cd .. && rm -rf Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz \
+    # Extract major.minor version (e.g., 3.12 from 3.12.12)
+    && PYTHON_MM=$(echo ${PYTHON_VERSION} | cut -d. -f1,2) \
     # Remove any existing python symlinks and create new ones
     && rm -f /usr/bin/python3 /usr/bin/python /usr/bin/pip3 /usr/bin/pip \
-    && ln -sf /usr/local/bin/python3.10 /usr/bin/python3.10 \
-    && ln -sf /usr/local/bin/python3.10 /usr/bin/python3 \
-    && ln -sf /usr/local/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/local/bin/pip3.10 /usr/bin/pip3 \
-    && ln -sf /usr/local/bin/pip3.10 /usr/bin/pip \
+    && ln -sf /usr/local/bin/python${PYTHON_MM} /usr/bin/python${PYTHON_MM} \
+    && ln -sf /usr/local/bin/python${PYTHON_MM} /usr/bin/python3 \
+    && ln -sf /usr/local/bin/python${PYTHON_MM} /usr/bin/python \
+    && ln -sf /usr/local/bin/pip${PYTHON_MM} /usr/bin/pip3 \
+    && ln -sf /usr/local/bin/pip${PYTHON_MM} /usr/bin/pip \
     # Verify installation
     && python3 --version \
     && pip3 --version
